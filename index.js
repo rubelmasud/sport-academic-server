@@ -134,10 +134,10 @@ async function run() {
         })
 
         // class collection
-        // app.get('/allclass', async (req, res) => {
-        //     const result = await classesCollection.find().toArray();
-        //     res.send(result)
-        // })
+        app.get('/allclass', async (req, res) => {
+            const result = await classesCollection.find().toArray();
+            res.send(result)
+        })
 
         app.post('/addclass', async (req, res) => {
             const Add = req.body
