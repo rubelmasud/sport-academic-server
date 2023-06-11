@@ -45,6 +45,7 @@ async function run() {
 
         const usersCollection = client.db("sportDB").collection('users')
         const classesCollection = client.db('sportDB').collection("allClass")
+        const selectedClassCollection = client.db('sportDB').collection("selectedClass")
 
 
         // JWT
@@ -142,6 +143,26 @@ async function run() {
         app.post('/addclass', async (req, res) => {
             const Add = req.body
             const result = await classesCollection.insertOne(Add)
+            res.send(result)
+        })
+
+
+        // class selected api
+        app.get('/allSelectedClass', async (req, res) => {
+            const email = req.query.email;
+            console.log(email);
+            if (!email) {
+                return res.send([]);
+            }
+            const query = { studentEmail: email };
+            const result = await selectedClassCollection.find(query).toArray();
+            res.send(result);
+        });
+
+        app.post('/selectedClasses', async (req, res) => {
+            const selectClass = req.body
+            console.log(selectClass);
+            const result = await selectedClassCollection.insertOne(selectClass)
             res.send(result)
         })
 
