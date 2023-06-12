@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const morgan = require('morgan')
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 require('dotenv').config()
@@ -62,7 +63,7 @@ async function run() {
             console.log(email);
         })
 
-        app.get('/users', verifyJWT, async (req, res) => {
+        app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray();
             res.send(result)
         })
@@ -146,8 +147,30 @@ async function run() {
             res.send(result)
         })
 
+        app.get('/allAddededClasses', async (req, res) => {
+            const email = req.query.email;
+            console.log(email);
+            if (!email) {
+                return res.send([]);
+            }
+            const query = { Email: email };
+            const result = await classesCollection.find(query).toArray();
+            res.send(result);
+        });
+
+
+
+
+
+
+
 
         // class selected api
+        app.get('/selectedClasses', async (req, res) => {
+            const result = await selectedClassCollection.find().toArray()
+            res.send(result)
+        })
+
         app.get('/allSelectedClass', async (req, res) => {
             const email = req.query.email;
             console.log(email);
@@ -165,6 +188,29 @@ async function run() {
             const result = await selectedClassCollection.insertOne(selectClass)
             res.send(result)
         })
+
+        app.delete('/selectDelete/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const result = await selectedClassCollection.deleteOne(query)
+            res.send(result)
+        })
+
+
+        // payment api
+        app.post('/create-payment-intent', async (req, res) => {
+            const { Price } = req.body
+            const amount = Price * 100
+            const paymentIntent = await stripe.paymentIntents.crate({
+                amount: amount,
+                currency: "usd",
+                payment_method_types: ['card']
+            })
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+        })
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
