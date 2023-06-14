@@ -57,12 +57,8 @@ async function run() {
             res.send({ token })
         })
 
-        // admin related api
+
         // user collection
-        app.get('/user/:email', async (req, res) => {
-            const email = req.params.email
-            console.log(email);
-        })
 
         app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray();
@@ -179,7 +175,6 @@ async function run() {
 
         app.post('/selectedClasses', async (req, res) => {
             const selectClass = req.body
-            console.log(selectClass);
             const result = await selectedClassCollection.insertOne(selectClass)
             res.send(result)
         })
@@ -193,7 +188,6 @@ async function run() {
 
 
         // payment api
-
         app.post('/create-payment-intent', async (req, res) => {
             const { price } = req.body;
             const amount = price * 100
@@ -207,8 +201,15 @@ async function run() {
             })
         })
 
+        app.get('/payments', async (req, res) => {
+            const email = req.body
+            const result = await paymentCollection.find(email).toArray()
+            res.send(result)
+        })
+
         app.post('/payments', async (req, res) => {
-            const paymentInfo = req.body
+            const paymentInfo = req.params.email
+            const query = { email: email }
             const result = await paymentCollection.insertOne(paymentInfo);
             res.send(result)
         })
