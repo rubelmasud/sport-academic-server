@@ -2,10 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const morgan = require('morgan')
-const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 require('dotenv').config()
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 5000
 
 app.use(cors())
@@ -47,6 +47,7 @@ async function run() {
         const usersCollection = client.db("sportDB").collection('users')
         const classesCollection = client.db('sportDB').collection("allClass")
         const selectedClassCollection = client.db('sportDB').collection("selectedClass")
+        const paymentCollection = client.db('sportDB').collection("payments")
 
 
         // JWT
@@ -100,7 +101,6 @@ async function run() {
             if (!req.decoded || req.decoded.email !== email) {
                 return res.status(403).send({ error: true, message: 'Forbidden' });
             }
-
             const query = { email: email };
             const user = await usersCollection.findOne(query);
             const result = { instructor: user?.role === 'instructor' };
@@ -160,11 +160,6 @@ async function run() {
 
 
 
-
-
-
-
-
         // class selected api
         app.get('/selectedClasses', async (req, res) => {
             const result = await selectedClassCollection.find().toArray()
@@ -198,19 +193,25 @@ async function run() {
 
 
         // payment api
+
         app.post('/create-payment-intent', async (req, res) => {
-            const { Price } = req.body
-            const amount = Price * 100
-            const paymentIntent = await stripe.paymentIntents.crate({
+            const { price } = req.body;
+            const amount = price * 100
+            const paymentIntent = await stripe.paymentIntents.create({
                 amount: amount,
-                currency: "usd",
+                currency: 'usd',
                 payment_method_types: ['card']
-            })
-            res.send({
-                clientSecret: paymentIntent.client_secret,
             });
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
         })
 
+        app.post('/payments', async (req, res) => {
+            const paymentInfo = req.body
+            const result = await paymentCollection.insertOne(paymentInfo);
+            res.send(result)
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
