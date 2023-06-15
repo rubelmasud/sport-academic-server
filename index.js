@@ -57,8 +57,17 @@ async function run() {
             res.send({ token })
         })
 
-
+        // admin related api
         // user collection
+        // app.get('/user/:email', async (req, res) => {
+        //     const email = req.params.email
+        //     console.log(email);
+        // })
+
+        app.get('/popularInstructors', async (req, res) => {
+            const result = await usersCollection.find({ role: "instructor" }).sort({ Student: -1 }).limit(6).toArray();
+            res.send(result)
+        })
 
         app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray();
@@ -79,7 +88,6 @@ async function run() {
 
         app.get('/users/admin/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
-
             if (!req.decoded || req.decoded.email !== email) {
                 return res.status(403).send({ error: true, message: 'Forbidden' });
             }
@@ -102,7 +110,6 @@ async function run() {
             const result = { instructor: user?.role === 'instructor' };
             res.send(result);
         });
-
 
 
         app.patch('/users/admin/:id', async (req, res) => {
@@ -162,6 +169,29 @@ async function run() {
             res.send(result)
         })
 
+        app.patch('/paymentClass/:id', async (req, res) => {
+            try {
+                const id = req.params.id;
+                console.log(id);
+
+                const filter = { _id: new ObjectId(id) };
+                const update = {
+                    $inc: {
+                        AvailableSeats: -1,
+                        Student: 1
+                    }
+                };
+
+                const result = await classesCollection.updateOne(filter, update);
+                console.log(result);
+                res.send(result);
+            } catch (error) {
+                console.error('Error occurred:', error);
+                res.status(500).json({ error: 'Internal server error' });
+            }
+        });
+
+
         app.get('/allSelectedClass', async (req, res) => {
             const email = req.query.email;
             console.log(email);
@@ -201,15 +231,14 @@ async function run() {
             })
         })
 
-        app.get('/payments', async (req, res) => {
-            const email = req.body
-            const result = await paymentCollection.find(email).toArray()
-            res.send(result)
+        app.get('/enrolled', async (req, res) => {
+            const email = req.body.email
+            const result = await paymentCollection.find(email).sort({ date: -1 }).toArray();
+            res.send(result);
         })
 
         app.post('/payments', async (req, res) => {
-            const paymentInfo = req.params.email
-            const query = { email: email }
+            const paymentInfo = req.body
             const result = await paymentCollection.insertOne(paymentInfo);
             res.send(result)
         })
