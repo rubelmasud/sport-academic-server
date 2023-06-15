@@ -57,13 +57,6 @@ async function run() {
             res.send({ token })
         })
 
-        // admin related api
-        // user collection
-        // app.get('/user/:email', async (req, res) => {
-        //     const email = req.params.email
-        //     console.log(email);
-        // })
-
         app.get('/popularInstructors', async (req, res) => {
             const result = await usersCollection.find({ role: "instructor" }).sort({ Student: -1 }).limit(6).toArray();
             res.send(result)
@@ -149,6 +142,12 @@ async function run() {
             const result = await classesCollection.insertOne(Add)
             res.send(result)
         })
+
+        app.get('/popularClasses', async (req, res) => {
+            const result = await classesCollection.find().limit(6).sort({ Student: -1 }).toArray();
+            res.send(result)
+        });
+
 
         app.get('/allAddededClasses', async (req, res) => {
             const email = req.query.email;
