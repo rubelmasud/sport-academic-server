@@ -82,8 +82,6 @@ async function run() {
 
         app.get('/users/admin/:email', async (req, res) => {
             const email = req.params.email;
-
-
             const query = { email: email }
             const user = await usersCollection.findOne(query);
             const result = { admin: user?.role === 'admin' }
@@ -92,7 +90,6 @@ async function run() {
 
         app.get('/users/instructor/:email', async (req, res) => {
             const email = req.params.email;
-            console.log(email);
             const query = { email: email };
             const user = await usersCollection.findOne(query);
             console.log(user);
@@ -167,8 +164,6 @@ async function run() {
         app.patch('/paymentClass/:id', async (req, res) => {
             try {
                 const id = req.params.id;
-                console.log(id);
-
                 const filter = { _id: new ObjectId(id) };
                 const update = {
                     $inc: {
@@ -227,8 +222,9 @@ async function run() {
         })
 
         app.get('/enrolled', async (req, res) => {
-            const email = req.body.email
-            const result = await paymentCollection.find(email).sort({ date: -1 }).toArray();
+            const email = req.params.email
+            const query = { email: email }
+            const result = await paymentCollection.find(query).sort({ date: -1 }).toArray();
             res.send(result);
         })
 
