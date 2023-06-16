@@ -1,10 +1,11 @@
 const express = require('express');
 const cors = require('cors');
+require('dotenv').config()
 const jwt = require('jsonwebtoken');
 const morgan = require('morgan')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
-require('dotenv').config()
+
 const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 5000
 
@@ -53,7 +54,7 @@ async function run() {
         // JWT
         app.post('/jwt', (req, res) => {
             const user = req.body
-            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: 1 })
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
             res.send({ token })
         })
 
@@ -79,27 +80,22 @@ async function run() {
         })
 
 
-        app.get('/users/admin/:email', verifyJWT, async (req, res) => {
+        app.get('/users/admin/:email', async (req, res) => {
             const email = req.params.email;
-            if (!req.decoded || req.decoded.email !== email) {
-                return res.status(403).send({ error: true, message: 'Forbidden' });
-            }
+
+
             const query = { email: email }
             const user = await usersCollection.findOne(query);
-            const result = {
-                admin: user?.role === 'admin'
-            }
+            const result = { admin: user?.role === 'admin' }
             res.send(result);
         })
 
-        app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
+        app.get('/users/instructor/:email', async (req, res) => {
             const email = req.params.email;
-
-            if (!req.decoded || req.decoded.email !== email) {
-                return res.status(403).send({ error: true, message: 'Forbidden' });
-            }
+            console.log(email);
             const query = { email: email };
             const user = await usersCollection.findOne(query);
+            console.log(user);
             const result = { instructor: user?.role === 'instructor' };
             res.send(result);
         });
